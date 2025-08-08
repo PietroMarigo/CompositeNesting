@@ -62,7 +62,12 @@ public class NestingController {
         }
 
         Polygon sheet = GeometryUtils.createSheet(config.sheetWidth(), config.sheetHeight());
-        List<Geometry> placed = nestingService.nestParts(parts, sheet, config.maxNoImprovement());
+        List<Geometry> placed = nestingService.nestParts(
+                parts,
+                sheet,
+                config.spacing(),
+                config.rotationStep(),
+                config.maxNoImprovement());
         List<Placement> placements = new ArrayList<>();
         for (int i = 0; i < placed.size(); i++) {
             Geometry g = placed.get(i);

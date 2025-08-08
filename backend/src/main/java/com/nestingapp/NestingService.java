@@ -29,7 +29,14 @@ public class NestingService {
      * layout.
      */
     public Geometry nest(List<Geometry> parts, Polygon sheet, int maxNoImprovement) {
-        List<Geometry> placed = nestParts(parts, sheet, maxNoImprovement);
+        return nest(parts, sheet, 0, 15, maxNoImprovement);
+    }
+
+    /**
+     * Nests the provided parts with configurable spacing and rotation step.
+     */
+    public Geometry nest(List<Geometry> parts, Polygon sheet, double spacing, double rotationStep, int maxNoImprovement) {
+        List<Geometry> placed = nestParts(parts, sheet, spacing, rotationStep, maxNoImprovement);
         return GeometryUtils.factory().buildGeometry(placed);
     }
 
@@ -39,11 +46,24 @@ public class NestingService {
      * than a combined layout geometry.
      */
     public List<Geometry> nestParts(List<Geometry> parts, Polygon sheet, int maxNoImprovement) {
+        return nestParts(parts, sheet, 0, 15, maxNoImprovement);
+    }
+
+    /**
+     * Nests the provided parts and returns the individual placed geometries.
+     * Parts are first buffered by the given spacing before placement.
+     */
+    public List<Geometry> nestParts(List<Geometry> parts, Polygon sheet, double spacing, double rotationStep, int maxNoImprovement) {
         if (parts.isEmpty()) {
             return List.of();
         }
 
-        List<Geometry> shuffled = new ArrayList<>(parts);
+        List<Geometry> buffered = new ArrayList<>();
+        for (Geometry part : parts) {
+            buffered.add(GeometryUtils.applySpacing(part, spacing));
+        }
+
+        List<Geometry> shuffled = new ArrayList<>(buffered);
         List<Geometry> bestPlaced = new ArrayList<>();
         double bestScore = Double.MAX_VALUE;
         int noImprovement = 0;
@@ -61,7 +81,7 @@ public class NestingService {
                 placed.add(positioned);
             }
 
-            List<Geometry> improved = hillClimb(placed);
+            List<Geometry> improved = hillClimb(placed, rotationStep);
             double score = layoutArea(improved);
             if (score < bestScore) {
                 bestScore = score;
@@ -147,11 +167,11 @@ public class NestingService {
     }
 
     /**
-     * Simple hill climbing over rotation angles. Each part is rotated by ±15°
-     * and repositioned; improvements are kept until no further reduction of the
-     * layout bounding box area is found.
+     * Simple hill climbing over rotation angles. Each part is rotated by the
+     * given {@code rotationStep} in both directions and repositioned; improvements
+     * are kept until no further reduction of the layout bounding box area is found.
      */
-    private List<Geometry> hillClimb(List<Geometry> parts) {
+    private List<Geometry> hillClimb(List<Geometry> parts, double rotationStep) {
         List<Geometry> placed = new ArrayList<>(parts);
         double bestArea = layoutArea(placed);
         boolean improved = true;
@@ -161,7 +181,7 @@ public class NestingService {
                 Geometry original = placed.get(i);
                 List<Geometry> others = new ArrayList<>(placed);
                 others.remove(i);
-                for (double angle : new double[] { -15, 15 }) {
+                for (double angle : new double[] { -rotationStep, rotationStep }) {
                     Geometry rotated = GeometryUtils.rotate(original, angle);
                     Geometry repositioned = placePart(rotated, others);
                     List<Geometry> candidate = new ArrayList<>(others);
