@@ -51,10 +51,6 @@ nesting-app/
 │
 └── README.md
 
-yaml
-Copy
-Edit
-
 ---
 
 ## 🧭 Development Roadmap
@@ -64,31 +60,31 @@ Edit
 2. Create Electron + React frontend using Vite or Create React App.
 3. Configure CORS and API routing between Electron and Java backend.
 
-### ✅ Phase 2: Geometry Core
-1. Implement polygon and NFP support using JTS.
-2. Handle shape importing via Apache Batik (SVG) and JDxf (DXF).
-3. Implement spacing, rotation, and material sheet logic.
+### Phase 2: Geometry Core
+- [ ] Implement polygon and NFP support using JTS in `GeometryUtils`.
+- [ ] Parse SVG files into geometry structures with `SvgParser`.
+- [ ] Implement DXF parsing via JDxf or custom parser in `DxfParser`.
+- [ ] Add spacing, rotation, and material sheet helpers.
 
-### ✅ Phase 3: Nesting Engine
-1. Basic brute-force or greedy nesting algorithm.
-2. Score layouts based on material usage or bounding box.
-3. Run loop until no improvement for N iterations.
+### Phase 3: Nesting Engine
+- [ ] Replace `NestingService` placeholder with a basic nesting algorithm.
+- [ ] Score layouts based on material usage or bounding box.
+- [ ] Iterate until no improvement for N iterations.
 
-### ✅ Phase 4: Backend API
-1. `/api/nest` — Accepts uploaded shapes and sheet config.
-2. `/api/status` — Optional async task monitoring.
-3. `/api/export` — Returns nested layout as SVG or DXF.
+### Phase 4: Backend API
+- [ ] Expand `/api/nest` to accept uploaded shapes and sheet config.
+- [ ] `/api/status` — Optional async task monitoring.
+- [ ] `/api/export` — Returns nested layout as SVG or DXF.
 
-### ✅ Phase 5: Frontend Features
-1. Upload/import parts (SVG/DXF).
-2. Configure nesting params (spacing, rotation step, quantity).
-3. Display preview of nested layout.
-4. Export nested layout.
+### Phase 5: Frontend Features
+- [ ] Upload/import parts (SVG/DXF) and configure nesting params.
+- [ ] Display preview of nested layout.
+- [ ] Export nested layout.
 
-### ✅ Phase 6: Integration & Packaging
-1. Bundle backend with Electron using Node `child_process` or REST.
-2. Use Electron Forge/Builder to create platform installers.
-3. Finalize MVP with basic validation, error handling, and docs.
+### Phase 6: Integration & Packaging
+- [ ] Bundle backend with Electron using Node `child_process` or REST.
+- [ ] Use Electron Forge/Builder to create platform installers.
+- [ ] Finalize MVP with basic validation, error handling, and docs.
 
 ---
 
