@@ -48,6 +48,7 @@ nesting-app/
 
 ### 🟩 4. Keep Backend and Frontend Decoupled
 - All interaction happens via REST APIs (hosted by Spring Boot backend).
+- The backend currently exposes `/api/nest`, `/api/status`, and `/api/export` for nesting workflows.
 - Frontend should not access backend code directly — only via HTTP.
 
 ### 🟩 5. Test Your Features

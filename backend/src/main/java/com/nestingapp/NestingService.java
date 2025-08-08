@@ -29,12 +29,22 @@ public class NestingService {
      * layout.
      */
     public Geometry nest(List<Geometry> parts, Polygon sheet, int maxNoImprovement) {
+        List<Geometry> placed = nestParts(parts, sheet, maxNoImprovement);
+        return GeometryUtils.factory().buildGeometry(placed);
+    }
+
+    /**
+     * Nests the provided parts and returns the individual placed geometries.
+     * This is useful for callers that need part-level placement data rather
+     * than a combined layout geometry.
+     */
+    public List<Geometry> nestParts(List<Geometry> parts, Polygon sheet, int maxNoImprovement) {
         if (parts.isEmpty()) {
-            return GeometryUtils.emptyGeometry();
+            return List.of();
         }
 
         List<Geometry> shuffled = new ArrayList<>(parts);
-        Geometry bestLayout = GeometryUtils.emptyGeometry();
+        List<Geometry> bestPlaced = new ArrayList<>();
         double bestScore = Double.MAX_VALUE;
         int noImprovement = 0;
 
@@ -51,18 +61,18 @@ public class NestingService {
                 placed.add(positioned);
             }
 
-            Geometry layout = hillClimb(placed);
-            double score = layout.getEnvelope().getArea();
+            List<Geometry> improved = hillClimb(placed);
+            double score = layoutArea(improved);
             if (score < bestScore) {
                 bestScore = score;
-                bestLayout = layout;
+                bestPlaced = improved;
                 noImprovement = 0;
             } else {
                 noImprovement++;
             }
         }
 
-        return bestLayout;
+        return bestPlaced;
     }
 
     /**
@@ -141,7 +151,7 @@ public class NestingService {
      * and repositioned; improvements are kept until no further reduction of the
      * layout bounding box area is found.
      */
-    private Geometry hillClimb(List<Geometry> parts) {
+    private List<Geometry> hillClimb(List<Geometry> parts) {
         List<Geometry> placed = new ArrayList<>(parts);
         double bestArea = layoutArea(placed);
         boolean improved = true;
@@ -166,7 +176,7 @@ public class NestingService {
                 }
             }
         }
-        return GeometryUtils.factory().buildGeometry(placed);
+        return placed;
     }
 
     private double layoutArea(List<Geometry> geoms) {

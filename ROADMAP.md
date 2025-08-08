@@ -74,9 +74,9 @@ nesting-app/
       a simple hill climbing rotation search.
 
 ### Phase 4: Backend API
-- [ ] Expand `/api/nest` to accept uploaded shapes and sheet config.
-- [ ] `/api/status` — Optional async task monitoring.
-- [ ] `/api/export` — Returns nested layout as SVG or DXF.
+- [x] Expand `/api/nest` to accept uploaded shapes and sheet config.
+- [x] `/api/status` — Optional async task monitoring.
+- [x] `/api/export` — Returns nested layout as SVG or DXF.
 
 ### Phase 5: Frontend Features
 - [ ] Upload/import parts (SVG/DXF) and configure nesting params.

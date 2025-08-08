@@ -18,7 +18,6 @@ public class NestingServiceTest {
 
     @Test
     void nestsTwoSquaresSideBySide() {
-
         Geometry square = GeometryUtils.createPolygon(List.of(
             new Coordinate(0, 0),
             new Coordinate(1, 0),
