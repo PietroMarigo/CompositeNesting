@@ -93,18 +93,27 @@ public class NestingService {
 
         for (Geometry p : placed) {
             Geometry nfp = GeometryUtils.noFitPolygon(p, part);
-            for (Coordinate c : nfp.getCoordinates()) {
-                AffineTransformation move = AffineTransformation.translationInstance(c.x, c.y);
-                Geometry candidate = move.transform(part);
-                if (intersectsAny(candidate, placed)) {
-                    continue;
-                }
-                List<Geometry> temp = new ArrayList<>(placed);
-                temp.add(candidate);
-                double area = layoutArea(temp);
-                if (area < bestArea) {
-                    bestArea = area;
-                    best = candidate;
+            Coordinate[] coords = nfp.getCoordinates();
+            for (int i = 0; i < coords.length - 1; i++) {
+                Coordinate vertex = coords[i];
+                Coordinate next = coords[i + 1];
+                Coordinate midpoint = new Coordinate(
+                    (vertex.x + next.x) / 2.0,
+                    (vertex.y + next.y) / 2.0
+                );
+                for (Coordinate c : new Coordinate[] { vertex, midpoint }) {
+                    AffineTransformation move = AffineTransformation.translationInstance(c.x, c.y);
+                    Geometry candidate = move.transform(part);
+                    if (intersectsAny(candidate, placed)) {
+                        continue;
+                    }
+                    List<Geometry> temp = new ArrayList<>(placed);
+                    temp.add(candidate);
+                    double area = layoutArea(temp);
+                    if (area < bestArea) {
+                        bestArea = area;
+                        best = candidate;
+                    }
                 }
             }
         }
@@ -114,7 +123,7 @@ public class NestingService {
 
     private boolean intersectsAny(Geometry g, List<Geometry> geoms) {
         for (Geometry other : geoms) {
-            if (g.intersects(other)) {
+            if (g.intersects(other) && !g.touches(other)) {
                 return true;
             }
         }

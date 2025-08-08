@@ -54,6 +54,10 @@ nesting-app/
 - Write unit tests for backend logic (geometry, nesting, file parsing).
 - Manually test UI features during MVP; automated tests optional for now.
 
+### 🟩 6. Avoid Redundant Files
+- Only create new files when they are genuinely needed.
+- When adding a file, choose a name clearly distinct from existing ones to prevent confusion.
+
 ---
 
 ## ⚠️ Constraints & Guidelines
