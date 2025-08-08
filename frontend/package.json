@@ -3,12 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "npm run lint"
+    "test": "npm run lint",
+    "package": "npm run build && electron-builder"
   },
   "dependencies": {
     "react": "^19.1.1",
@@ -27,6 +29,30 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.0",
     "vite": "^7.1.0",
-    "electron": "^31.4.0"
+    "electron": "^31.4.0",
+    "electron-builder": "^24.13.1"
+  },
+  "build": {
+    "appId": "com.nestingapp.desktop",
+    "productName": "NestingApp",
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/target/backend-0.0.1-SNAPSHOT.jar",
+        "to": "backend/backend.jar"
+      }
+    ],
+    "mac": {
+      "target": ["dmg"]
+    },
+    "win": {
+      "target": ["nsis"]
+    },
+    "linux": {
+      "target": ["AppImage"]
+    }
   }
 }
