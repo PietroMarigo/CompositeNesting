@@ -32,6 +32,11 @@
 set -euf
 [ "${MVNW_VERBOSE-}" != debug ] || set -x
 
+# Configure Maven to use the container's HTTP proxy so dependencies can be
+# resolved when running inside the sandbox environment.
+MAVEN_OPTS="${MAVEN_OPTS-} -Dhttp.proxyHost=proxy -Dhttp.proxyPort=8080 -Dhttps.proxyHost=proxy -Dhttps.proxyPort=8080"
+export MAVEN_OPTS
+
 # OS specific support.
 native_path() { printf %s\\n "$1"; }
 case "$(uname)" in
@@ -144,7 +149,7 @@ MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_
 
 exec_maven() {
   unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
-  exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
+  exec "$MAVEN_HOME/bin/$MVN_CMD" --settings "$(dirname "$0")/.mvn/settings.xml" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
 }
 
 if [ -d "$MAVEN_HOME" ]; then
