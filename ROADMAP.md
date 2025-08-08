@@ -67,9 +67,11 @@ nesting-app/
 - [x] Add spacing, rotation, and material sheet helpers.
 
 ### Phase 3: Nesting Engine
-- [ ] Replace `NestingService` placeholder with a basic nesting algorithm.
-- [ ] Score layouts based on material usage or bounding box.
-- [ ] Iterate until no improvement for N iterations.
+- [x] Replace `NestingService` placeholder with an NFP boundary search using
+      Minkowski sums.
+- [x] Score layouts based on material usage via bounding box area.
+- [x] Iterate until no improvement for N iterations and refine placements with
+      a simple hill climbing rotation search.
 
 ### Phase 4: Backend API
 - [ ] Expand `/api/nest` to accept uploaded shapes and sheet config.

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Polygon;
@@ -11,24 +12,27 @@ import org.locationtech.jts.geom.util.AffineTransformation;
 import org.springframework.stereotype.Service;
 
 /**
- * Core nesting logic facade. Provides a naive row-based nesting algorithm
- * which iteratively searches for a layout with the smallest bounding box.
+ * Core nesting logic facade. Provides a simple NFP based search that positions
+ * parts along no-fit polygon boundaries and applies a small hill climbing
+ * refinement of rotation angles.
  */
 @Service
 public class NestingService {
 
     /**
-     * Nests the provided parts onto the given sheet. The algorithm shuffles the
-     * parts and places them in rows, keeping the layout with the smallest
-     * bounding box area. Iteration stops after {@code maxNoImprovement}
-     * consecutive rounds without an improvement.
+     * Nests the provided parts onto the given sheet. Parts are shuffled and
+     * placed sequentially by searching along NFP boundaries for the position
+     * that yields the smallest bounding box. After an initial placement a hill
+     * climbing refinement is applied which perturbs rotation angles by small
+     * steps and repositions the parts if an improvement is found. Iteration
+     * stops after {@code maxNoImprovement} consecutive rounds without a better
+     * layout.
      */
     public Geometry nest(List<Geometry> parts, Polygon sheet, int maxNoImprovement) {
         if (parts.isEmpty()) {
             return GeometryUtils.emptyGeometry();
         }
 
-        double sheetWidth = sheet.getEnvelopeInternal().getWidth();
         List<Geometry> shuffled = new ArrayList<>(parts);
         Geometry bestLayout = GeometryUtils.emptyGeometry();
         double bestScore = Double.MAX_VALUE;
@@ -37,32 +41,17 @@ public class NestingService {
         while (noImprovement < maxNoImprovement) {
             Collections.shuffle(shuffled);
             List<Geometry> placed = new ArrayList<>();
-            double cursorX = 0;
-            double cursorY = 0;
-            double rowHeight = 0;
+            // place first part at origin
+            Geometry first = translateToOrigin(shuffled.get(0));
+            placed.add(first);
 
-            for (Geometry part : shuffled) {
-                Envelope env = part.getEnvelopeInternal();
-                double width = env.getWidth();
-                double height = env.getHeight();
-
-                if (cursorX + width > sheetWidth) {
-                    cursorX = 0;
-                    cursorY += rowHeight;
-                    rowHeight = 0;
-                }
-
-                AffineTransformation move = AffineTransformation.translationInstance(
-                        cursorX - env.getMinX(),
-                        cursorY - env.getMinY());
-                Geometry positioned = move.transform(part);
+            for (int i = 1; i < shuffled.size(); i++) {
+                Geometry part = shuffled.get(i);
+                Geometry positioned = placePart(part, placed);
                 placed.add(positioned);
-
-                cursorX += width;
-                rowHeight = Math.max(rowHeight, height);
             }
 
-            Geometry layout = GeometryUtils.factory().buildGeometry(placed);
+            Geometry layout = hillClimb(placed);
             double score = layout.getEnvelope().getArea();
             if (score < bestScore) {
                 bestScore = score;
@@ -90,6 +79,90 @@ public class NestingService {
         ));
         Geometry layout = nest(List.of(square, square), GeometryUtils.createSheet(10, 10), 5);
         return layout.toText();
+    }
+
+    /**
+     * Places {@code part} relative to already {@code placed} parts by exploring
+     * all vertices of the pairwise NFPs. The candidate yielding the smallest
+     * bounding box is returned. If no valid position is found the part is
+     * returned translated to the origin.
+     */
+    private Geometry placePart(Geometry part, List<Geometry> placed) {
+        Geometry best = null;
+        double bestArea = Double.MAX_VALUE;
+
+        for (Geometry p : placed) {
+            Geometry nfp = GeometryUtils.noFitPolygon(p, part);
+            for (Coordinate c : nfp.getCoordinates()) {
+                AffineTransformation move = AffineTransformation.translationInstance(c.x, c.y);
+                Geometry candidate = move.transform(part);
+                if (intersectsAny(candidate, placed)) {
+                    continue;
+                }
+                List<Geometry> temp = new ArrayList<>(placed);
+                temp.add(candidate);
+                double area = layoutArea(temp);
+                if (area < bestArea) {
+                    bestArea = area;
+                    best = candidate;
+                }
+            }
+        }
+
+        return best != null ? best : translateToOrigin(part);
+    }
+
+    private boolean intersectsAny(Geometry g, List<Geometry> geoms) {
+        for (Geometry other : geoms) {
+            if (g.intersects(other)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Geometry translateToOrigin(Geometry g) {
+        Envelope env = g.getEnvelopeInternal();
+        AffineTransformation move = AffineTransformation.translationInstance(-env.getMinX(), -env.getMinY());
+        return move.transform(g);
+    }
+
+    /**
+     * Simple hill climbing over rotation angles. Each part is rotated by ±15°
+     * and repositioned; improvements are kept until no further reduction of the
+     * layout bounding box area is found.
+     */
+    private Geometry hillClimb(List<Geometry> parts) {
+        List<Geometry> placed = new ArrayList<>(parts);
+        double bestArea = layoutArea(placed);
+        boolean improved = true;
+        while (improved) {
+            improved = false;
+            for (int i = 0; i < placed.size(); i++) {
+                Geometry original = placed.get(i);
+                List<Geometry> others = new ArrayList<>(placed);
+                others.remove(i);
+                for (double angle : new double[] { -15, 15 }) {
+                    Geometry rotated = GeometryUtils.rotate(original, angle);
+                    Geometry repositioned = placePart(rotated, others);
+                    List<Geometry> candidate = new ArrayList<>(others);
+                    candidate.add(repositioned);
+                    double area = layoutArea(candidate);
+                    if (area < bestArea) {
+                        placed = candidate;
+                        bestArea = area;
+                        improved = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return GeometryUtils.factory().buildGeometry(placed);
+    }
+
+    private double layoutArea(List<Geometry> geoms) {
+        Geometry layout = GeometryUtils.factory().buildGeometry(geoms);
+        return layout.getEnvelope().getArea();
     }
 }
 
