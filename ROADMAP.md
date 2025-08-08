@@ -61,10 +61,10 @@ nesting-app/
 3. Configure CORS and API routing between Electron and Java backend.
 
 ### Phase 2: Geometry Core
-- [ ] Implement polygon and NFP support using JTS in `GeometryUtils`.
-- [ ] Parse SVG files into geometry structures with `SvgParser`.
-- [ ] Implement DXF parsing via JDxf or custom parser in `DxfParser`.
-- [ ] Add spacing, rotation, and material sheet helpers.
+- [x] Implement polygon and NFP support using JTS in `GeometryUtils`.
+- [x] Parse SVG files into geometry structures with `SvgParser`.
+- [x] Implement DXF parsing via JDxf or custom parser in `DxfParser`.
+- [x] Add spacing, rotation, and material sheet helpers.
 
 ### Phase 3: Nesting Engine
 - [ ] Replace `NestingService` placeholder with a basic nesting algorithm.
