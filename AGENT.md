@@ -12,7 +12,7 @@ You are responsible for building a 2D nesting application similar to Deepnest us
 - **Backend**: Java (Spring Boot) – geometry engine, nesting logic, file handling
 - **Frontend**: Electron + React – user interface and visual layout preview
 
-The overall goal is to develop a Minimum Viable Product (MVP) that loads part files, nests them onto a material sheet, and exports the final layout.
+The overall goal is to develop a Minimum Viable Product (MVP) that loads part files, nests them onto a material sheet, and exports the final layout. The nesting engine currently relies on Minkowski-sum based no-fit polygons and a boundary search with hill climbing for placement refinement; future contributions should build upon this approach.
 
 ---
 
@@ -53,6 +53,10 @@ nesting-app/
 ### 🟩 5. Test Your Features
 - Write unit tests for backend logic (geometry, nesting, file parsing).
 - Manually test UI features during MVP; automated tests optional for now.
+
+### 🟩 6. Avoid Redundant Files
+- Only create new files when they are genuinely needed.
+- When adding a file, choose a name clearly distinct from existing ones to prevent confusion.
 
 ---
 

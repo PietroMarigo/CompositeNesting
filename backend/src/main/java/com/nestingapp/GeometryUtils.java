@@ -51,12 +51,31 @@ public final class GeometryUtils {
     }
 
     /**
-     * Computes a very simple no-fit polygon by subtracting the moving geometry
-     * from the base geometry. This is a placeholder for a proper NFP
-     * implementation.
+     * Computes the Minkowski sum of the two geometries by translating the
+     * second geometry to every vertex of the first and unioning the results.
+     * This is a lightweight approximation that works well for convex parts and
+     * is sufficient for our NFP based placement search.
      */
-    public static Geometry computeNoFitPolygon(Geometry base, Geometry moving) {
-        return base.difference(moving);
+    public static Geometry minkowskiSum(Geometry a, Geometry b) {
+        Geometry sum = emptyGeometry();
+        for (Coordinate ca : a.getCoordinates()) {
+            AffineTransformation move = AffineTransformation.translationInstance(ca.x, ca.y);
+            Geometry translated = move.transform(b);
+            sum = sum.union(translated);
+        }
+        return sum;
+    }
+
+    /**
+     * Creates the no-fit polygon of {@code base} and {@code moving}. The moving
+     * geometry is mirrored around the origin before computing the Minkowski
+     * sum, yielding the feasible region of translation vectors where the two
+     * parts touch but do not overlap.
+     */
+    public static Geometry noFitPolygon(Geometry base, Geometry moving) {
+        AffineTransformation mirror = AffineTransformation.scaleInstance(-1, -1);
+        Geometry reversed = mirror.transform(moving);
+        return minkowskiSum(base, reversed);
     }
 
     /**
