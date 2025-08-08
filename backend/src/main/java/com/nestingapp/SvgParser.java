@@ -24,6 +24,12 @@ public class SvgParser {
      * Parses raw SVG content into an {@link SVGDocument}.
      */
     public SVGDocument parse(String svgContent) throws Exception {
+        // Batik's parser requires the root element to declare the SVG namespace.
+        // Tests may supply minimal snippets without an xmlns attribute, so we
+        // inject it if missing to keep parsing permissive.
+        if (!svgContent.contains("xmlns=\"http://www.w3.org/2000/svg\"")) {
+            svgContent = svgContent.replaceFirst("<svg", "<svg xmlns=\"http://www.w3.org/2000/svg\"");
+        }
         String parser = XMLResourceDescriptor.getXMLParserClassName();
         SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(parser);
         return factory.createSVGDocument("", new StringReader(svgContent));
