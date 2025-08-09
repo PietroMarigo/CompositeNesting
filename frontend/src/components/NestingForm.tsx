@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import FileUploader from './FileUploader';
-import NestingParametersForm, { NestingParameters } from './NestingParameters';
+import NestingParametersForm, { type NestingParameters } from './NestingParameters';
 import api from '../services/api';
-import NestingPreview, { NestingResult } from '../views/NestingPreview';
+import NestingPreview, { type NestingResult } from '../views/NestingPreview';
 
 /**
  * Combines file uploading and parameter inputs, posts to the backend
